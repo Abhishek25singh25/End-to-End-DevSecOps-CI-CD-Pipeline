@@ -16,9 +16,7 @@ jobs:
     uses: ./.github/workflows/docker-build-push.yml
     with:
       image_name: task-manager
-    secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+    secrets: inherit
 
   deploy:
     needs: docker
@@ -26,5 +24,4 @@ jobs:
 
     steps:
       - name: Deploy Step
-        run: |
-          echo "Deploying image: ${{ needs.docker.outputs.image_url }}"
+        run: echo "Deploying image:${{ needs.docker.outputs.image_url }}"
