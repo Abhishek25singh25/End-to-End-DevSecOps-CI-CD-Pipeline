@@ -1,1 +1,13 @@
+name: PR Check Pipeline
+on:
+  pull_request:
+    branches: [main]
+    types: [opened,synchronize]
 
+permissions:
+  contents: read
+
+jobs:
+  pr-check:
+    uses: ./.github/workflows/build-test.yml
+    secrets: inherit

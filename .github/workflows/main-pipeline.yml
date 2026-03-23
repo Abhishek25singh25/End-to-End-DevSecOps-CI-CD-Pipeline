@@ -1,0 +1,29 @@
+name: Main Pipeline
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    uses: ./.github/workflows/build-test.yml
+
+  docker:
+    needs: build-test
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      image_name: task-manager
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_token: ${{ secrets.DOCKER_TOKEN }}
+
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Step
+        run: echo "Deploying image:${{ needs.docker.outputs.image_url }}"
