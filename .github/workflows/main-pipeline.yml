@@ -17,8 +17,8 @@ jobs:
     with:
       image_name: task-manager
     secrets:
-      docker_username: ${{ secrets.DOCKER_USERNAME }}
-      docker_token: ${{ secrets.DOCKER_TOKEN }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
   deploy:
     needs: docker
@@ -26,4 +26,5 @@ jobs:
 
     steps:
       - name: Deploy Step
-        run: echo "Deploying image:${{ needs.docker.outputs.image_url }}"
+        run: |
+          echo "Deploying image: ${{ needs.docker.outputs.image_url }}"
