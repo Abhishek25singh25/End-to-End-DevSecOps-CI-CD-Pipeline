@@ -60,7 +60,7 @@ jobs:
           echo "Waiting for app..."
           for i in {1..15}; do
             if curl -s http://localhost:5000 > /dev/null; then
-              echo "App is UP ✅"
+              echo "App is UP"
               break
             fi
             echo "Retrying..."
@@ -71,6 +71,7 @@ jobs:
         uses: zaproxy/action-full-scan@v0.10.0
         with:
           target: "http://localhost:5000"
+          allow_issue_writing: false   # 💀 FINAL FIX
 
   deploy:
     needs: [docker, dast]
