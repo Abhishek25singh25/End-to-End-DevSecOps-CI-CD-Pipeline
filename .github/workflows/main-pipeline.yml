@@ -12,8 +12,19 @@ jobs:
   build-test:
     uses: ./.github/workflows/build-test.yml
 
-  codeql:
+  gitleaks:
     needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+
+  codeql:
+    needs: gitleaks
     runs-on: ubuntu-latest
 
     steps:
@@ -34,21 +45,39 @@ jobs:
       image_name: task-manager
     secrets: inherit
 
-  scan:
+  trivy:
     needs: docker
     runs-on: ubuntu-latest
 
     steps:
-      - uses: aquasecurity/trivy-action@v0.20.0
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@v0.20.0
         with:
           image-ref: ${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}
           format: table
           exit-code: 0
           severity: CRITICAL,HIGH
 
-  deploy:
-    needs: [docker, scan]
+  dast:
+    needs: trivy
     runs-on: ubuntu-latest
 
     steps:
-      - run: echo Deploying
+      - name: Run App Container
+        run: |
+          docker run -d -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}
+          sleep 15
+
+      - name: Run ZAP Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: "http://localhost:3000"
+
+  deploy:
+    needs: [docker, dast]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Step
+        run: |
+          echo Deploying image: ${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}
