@@ -18,10 +18,24 @@ jobs:
       image_name: task-manager
     secrets: inherit
 
-  deploy:
+  scan:
     needs: docker
     runs-on: ubuntu-latest
 
     steps:
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@v0.20.0
+        with:
+          image-ref: ${{ needs.docker.outputs.image_url }}
+          format: table
+          exit-code: 0
+          severity: CRITICAL,HIGH
+
+  deploy:
+    needs: [docker, scan]
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Deploy Step
-        run: echo "Deploying image:${{ needs.docker.outputs.image_url }}"
+        run: |
+          echo Deploying image: ${{ needs.docker.outputs.image_url }}
