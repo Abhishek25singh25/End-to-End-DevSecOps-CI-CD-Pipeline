@@ -66,7 +66,16 @@ jobs:
       - name: Run App Container
         run: |
           docker run -d -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}
-          sleep 15
+
+          echo "Waiting for app to start..."
+          for i in {1..12}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "App is up!"
+              break
+            fi
+            echo "Retrying..."
+            sleep 5
+          done
 
       - name: Run ZAP Scan
         uses: zaproxy/action-full-scan@v0.10.0
