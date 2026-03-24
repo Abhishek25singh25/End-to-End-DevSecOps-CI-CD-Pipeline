@@ -15,27 +15,19 @@ jobs:
   gitleaks:
     needs: build-test
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Run Gitleaks Scan
-        uses: gitleaks/gitleaks-action@v2
+      - uses: actions/checkout@v4
+      - uses: gitleaks/gitleaks-action@v2
 
   codeql:
     needs: gitleaks
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: github/codeql-action/init@v3
         with:
           languages: javascript
-
       - uses: github/codeql-action/autobuild@v3
-
       - uses: github/codeql-action/analyze@v3
 
   docker:
@@ -48,7 +40,6 @@ jobs:
   trivy:
     needs: docker
     runs-on: ubuntu-latest
-
     steps:
       - name: Run Trivy Scan
         uses: aquasecurity/trivy-action@v0.20.0
@@ -61,16 +52,15 @@ jobs:
   dast:
     needs: trivy
     runs-on: ubuntu-latest
-
     steps:
       - name: Run App Container
         run: |
-          docker run -d -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}
+          docker run -d --network host ${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}
 
-          echo "Waiting for app to start..."
-          for i in {1..12}; do
-            if curl -s http://localhost:3000 > /dev/null; then
-              echo "App is up!"
+          echo "Waiting for app..."
+          for i in {1..15}; do
+            if curl -s http://localhost:5000 > /dev/null; then
+              echo "App is UP ✅"
               break
             fi
             echo "Retrying..."
@@ -80,13 +70,11 @@ jobs:
       - name: Run ZAP Scan
         uses: zaproxy/action-full-scan@v0.10.0
         with:
-          target: "http://localhost:3000"
+          target: "http://localhost:5000"
 
   deploy:
     needs: [docker, dast]
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy Step
-        run: |
-          echo Deploying image: ${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}
+        run: echo "Deploying image:${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}"
