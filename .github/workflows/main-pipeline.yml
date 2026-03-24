@@ -6,13 +6,29 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   build-test:
     uses: ./.github/workflows/build-test.yml
 
-  docker:
+  codeql:
     needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+
+      - uses: github/codeql-action/autobuild@v3
+
+      - uses: github/codeql-action/analyze@v3
+
+  docker:
+    needs: codeql
     uses: ./.github/workflows/docker-build-push.yml
     with:
       image_name: task-manager
@@ -23,8 +39,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@v0.20.0
+      - uses: aquasecurity/trivy-action@v0.20.0
         with:
           image-ref: ${{ secrets.DOCKER_USERNAME }}/task-manager:${{ github.sha }}
           format: table
@@ -36,6 +51,4 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy Step
-        run: |
-          echo Deploying image: ${{ needs.docker.outputs.image_url }}
+      - run: echo Deploying
