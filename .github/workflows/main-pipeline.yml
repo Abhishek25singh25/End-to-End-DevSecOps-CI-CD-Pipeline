@@ -67,12 +67,12 @@ jobs:
             sleep 5
           done
 
-      - name: Run ZAP Scan
+      - name: Run ZAP Scan (FINAL FIX)
         uses: zaproxy/action-full-scan@v0.10.0
         with:
           target: "http://localhost:5000"
           allow_issue_writing: false
-          artifact_name: ""   
+          cmd_options: "-silent -nostats -config api.disablekey=true"
 
   deploy:
     needs: [docker, dast]
